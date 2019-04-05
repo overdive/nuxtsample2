@@ -1,5 +1,5 @@
 defaults: &defaults
-  working_directory: ~/repo
+  working_directory: ~/aws-rough
   docker:
     - image: circleci/python:3.6-jessie-node-browsers
 
@@ -21,7 +21,7 @@ jobs:
             paths:
               - ~/.cache/yarn
         - persist_to_workspace:
-            root: ~/repo
+            root: ~/aws-rough
             paths:
               - ./*
 
@@ -29,17 +29,17 @@ jobs:
     <<: *defaults
     steps:
         - attach_workspace:
-          at: ~/repo
+          at: ~/aws-rough
         - run: yarn test
 
   build:
       <<: *defaults
       steps:
         - attach_workspace:
-            at: ~/repo
+            at: ~/aws-rough
         - run: yarn generate
         - persist_to_workspace:
-            root: ~/repo
+            root: ~/aws-rough
             paths:
               - dist
 
@@ -51,7 +51,6 @@ jobs:
       - run: sudo pip install awscli
       - run: aws s3 sync ./dist/ s3://dev-ventures-top --exact-timestamps --delete --exclude "*" --include "*.html" --cache-control no-store
       - run: aws s3 sync ./dist/ s3://dev-ventures-top --exact-timestamps --delete --exclude "*" --include "*.js" --cache-control max-age=31536000
-      - run: aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths "/*"
 
 workflows:
   version: 2
@@ -65,6 +64,13 @@ workflows:
       - build:
           requires:
               - install
+          filters:
+              branches:
+                  only:
+                      - master
+      - deploy:
+          requires:
+              - build
           filters:
               branches:
                   only:
