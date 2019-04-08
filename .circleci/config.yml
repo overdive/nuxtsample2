@@ -51,6 +51,7 @@ jobs:
       - run: sudo pip install awscli
       - run: aws s3 sync ./dist/ s3://dev-ventures-top --exact-timestamps --delete --exclude "*" --include "*.html" --cache-control no-store
       - run: aws s3 sync ./dist/ s3://dev-ventures-top --exact-timestamps --delete --exclude "*" --include "*.js" --cache-control max-age=31536000
+      - run: aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths "/*"
 
 workflows:
   version: 2
